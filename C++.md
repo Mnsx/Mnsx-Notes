@@ -48,7 +48,7 @@ int main() {
 
 ## C++转义序列的编码
 
-![](D:\Document\Notes\2026\Picture\C++转义序列的编码.png)
+![](.\Picture\C++转义序列的编码.png)
 
 ## E表示法
 
@@ -257,4 +257,44 @@ int main() {
 
 ## 数组、vector、array区别
 
-![](E:\Documents\Notes\Picture\数组、vector、array对比.png)
+![](.\Picture\数组、vector、array对比.png)
+
+# 函数
+
+## 指针与const
+
+const对指针进行声明有两种不同的定义
+
+* const修饰的是`*pt`，意味着指针指向一个常量对象
+
+  防止使用该指针来修改所指向的值
+
+  ```c++
+  #include <iostream>
+  
+  using namespace std;
+  
+  int main() {
+  
+      int age = 10;
+  
+      const int *p = &age;
+  
+      *p = 20; // 报错，无法通过指针修改所指向的值 
+  
+      return 0;
+  }
+  ```
+
+* const直接修饰指针，将指针本身声明为常量
+
+  防止改变指针指向的位置
+
+## 函数指针
+
+函数的地址是存储其机器语言代码的内存的开始地址
+
+函数原型`double fun(int);`那么函数指针的声明就应该是`double (*p) (int);`
+
+
+

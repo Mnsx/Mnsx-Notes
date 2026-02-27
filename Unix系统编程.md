@@ -406,7 +406,7 @@ int main() {
 
   大多数守护进程都使用BSD的syslog进行日志管理
 
-  ![](E:\Documents\Notes\Picture\BSD-syslog工作原理.png)
+  ![](.\Picture\BSD-syslog工作原理.png)
 
 * **守护进程规范**
   1. 如果守护进程使用锁文件，那么该文件通常存储在`/var/run`目录中，**通常守护进程需要超级用户权限才能在此目录下创建文件**，锁文件的名字通常为name.pid，其中name是该守护进程的名字
@@ -540,6 +540,10 @@ int system(const char *command);
 
   有名管道FIFO也是半双工的通信方式，但它允许无亲缘关系进程间的通信
 
+  有名管道的文件仅仅作为传输数据的通道，**并不会存放传输的数据**
+  
+  使用有名管道时需要先启动**读**，在写入管道后，如果不存在读取，那么可能存在内容丢失
+  
   ```c
   #include <stdio.h>
   #include <sys/types.h>
@@ -565,7 +569,7 @@ int system(const char *command);
       return 0;
   }
   ```
-
+  
   ```c
   #include <stdio.h>
   #include <sys/types.h>
@@ -592,7 +596,17 @@ int system(const char *command);
       return 0;
   }
   ```
-
   
+* **消息队列**
+
+  消息队列**只有释放消息队列或关闭操作系统才会消失**
+
+  本质上是位于内核空间的链表
+
+  消息类型用整数表示，而且必须大于0
+
+  每种类型的消息都被对应的链表所维护
+
+  **消息队列不适合表较大的数据的传输**
 
   
