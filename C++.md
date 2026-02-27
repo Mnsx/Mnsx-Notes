@@ -64,5 +64,197 @@ d.dddE~n指的是将小数点向左移动n位
 
 不同类型进行算术运算时，较小的类型将被转换为较大的类型
 
+# 复杂类型
 
+## 数组的初始化规则
 
+只有在定义数组时才能使用初始化
+
+不能将一个数组赋值给另一个数组
+
+```c
+int a[4] = {1, 2, 3, 5};
+int b[4];
+a[4] = {6, 7, 8, 9}; // not allowed
+b = a; // not allowed
+```
+
+## 读取一行字符串输入
+
+可以使用`get()`和`getline()`
+
+`getline()`将丢弃换行符，`get()`将保留换行符
+
+* `getline()`
+
+  通过回车键输入的换行符确定输入结束，或者读取到指定数量的字符
+
+  第一个参数，用来存储输入行的数组名称
+
+  第二个参数，要读取的字符数（包括'\0')
+
+* `get()`
+
+  拥有多种变体，可以与getline()相同方式使用，这种情况下不会读取并丢弃换行符，二十将其保留在输入队列中
+
+  ```c++
+  #include <iostream>
+  
+  using namespace std;
+  
+  int main() {
+  
+      char name[50] = {0};
+      cin.get(name, 10);
+      cout << name;
+      cin.get(); // get会将换行符保留在输入流中
+      cin.get(name, 20);
+      cout << name;
+  
+      return 0;
+  }
+  ```
+
+  或者可以使用`cin.get(name, 10).get()`来避免换行符被保留的问题
+
+  `cin.get()`只是读取一个字符
+
+  > **为什么使用`get()`而不是`getline()`？**
+  >
+  > 1. 老式实现没有getline()
+  > 2. get()使输入更仔细
+
+## 空行和其他问题
+
+* 当读取到空行时（`get()`），将设置失效位，接下来的输入将被阻断
+
+  可以通过使用`cin.clear()`来输入输入
+
+* 另一个潜在的问题，输入字符串可能比分配空间长，则会将多余的字符留在输入队列中，而`getline()`会设置失效位，并关闭后面的输入
+
+* 混合输入字符串和数字
+
+  ```c
+  #include <iostream>
+  
+  using namespace std;
+  
+  int main() {
+  
+      char str[10] = {0};
+      char add[10] = {0};
+  
+      cin >> str; // 123
+      // 剩余的回车符被读取了，直接退出
+      cin.getline(add, 10);
+      cout << str;
+      cout << add;
+      
+      return 0;
+  }
+  ```
+
+  可以通过`cin.get()`读取剩余的换行符
+
+  也可以通过`cin>>year`返回的cin对象调用`get()`方法读取剩余的换行符
+
+## string类的使用
+
+可以将一个string对象赋值给另一个string对象
+
+可以适合用运算符+将两个string对象合并起来
+
+string对象可以通过size()方法获取字符串长度
+
+string对象会根据内容自动调整大小
+
+## 结构体的位字段
+
+```c++
+struct torgle_register {
+    
+    unsigned int SN : 4; // 限制为4字节
+}
+```
+
+## 分配内存和释放内存
+
+功能类似于`malloc()`，提供需要的数据类型，new将找到一个长度合适的内存块，并返回该内存块的地址
+
+```c++
+int* pn = new int;
+```
+
+可以使用`delete()`将使用完成后的内存空间归还给内存池
+
+可以使用new创建数组
+
+```c++
+int * p = new int[10];
+```
+
+在释放这个数组内存时，需要使用
+
+```c++
+delete [] p;
+```
+
+## 管理数据内存的方式
+
+* **自动存储**
+
+  自动变量是一个局部变量，其作用域为包含它的代码块
+
+  **自动变量通常存储在栈中**
+
+* **静态存储**
+
+  整个程序执行期间都存在的存储方式
+
+* **动态存储**
+
+  程序管理一个内存池，被称为自由存储空间或堆
+
+## 模板类vector
+
+动态数组，可以在运行阶段设置vector对象的长度
+
+可以在末尾附加新的数据，可以在中间插入新数据
+
+**必须包含头文件vector**
+
+```c++
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+int main() {
+
+    vector<int> v;
+    v = {1, 2, 3};
+    cout << v[1] << endl;
+}
+```
+
+## 模板类array（C++11）
+
+array对象的长度是固定的，使用的栈内存存放数据，效率和数组相同
+
+```c++
+#include <iostream>
+#include <array>
+
+using namespace std;
+
+int main() {
+
+    array<int, 5> a;
+    a = {1, 2, 3, 4};
+    cout << a[3] << endl;
+}
+```
+
+## 数组、vector、array区别
+
+![](E:\Documents\Notes\Picture\数组、vector、array对比.png)
