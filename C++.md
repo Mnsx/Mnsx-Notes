@@ -296,5 +296,159 @@ const对指针进行声明有两种不同的定义
 
 函数原型`double fun(int);`那么函数指针的声明就应该是`double (*p) (int);`
 
+## 内联函数
+
+编译器将使用响应的函数代码替换函数调用
+
+运行速度比常规函数快，但是需要占用更多的内存
+
+如果**函数代码执行时间很短**，则内联函数就可以节省非内联调用的时间
+
+在函数声明前加上关键字inline
+
+**内联函数不能递归**
+
+## 引用变量
+
+引用是已定义的变量的别称
+
+* 创建引用变量
+
+  C++中&符号还能将其用来声明引用
+
+  ```c
+  int rats;
+  int & r = rats;
+  ```
+
+  引用和目标指向相同的值和内存单元
+
+  **引用必须在声明时将其初始化**
+
+* 将引用作为函数参数
+
+  地址运算符（&）使得按引用传递属于是传递的是地址
+
+* 引用的属性和特别之处
+
+  使用引用向函数传递信息，但是又不希望修改信息，**则应使用常量引用**
+
+  ```c
+  double cubeRef(const double &a);
+  ```
+
+  引用时一个变量的别名，则实参应该是这个变量，在提供参数时对引用进行运算
+
+  ```c
+  cubeRef(a + 2);	// not allowed
+  ```
+
+  当参数为**const引用**时，如果实参和引用参数不匹配，C++会生成临时变量，同时需要
+
+  * 实参的类型正确，但不是**左值**
+
+    > 左值参数是可被引用的数据对象，非左值包括字面常量（用引号标识的字符串除外）和包含多项的表达式
+
+  * 实参的类型不正确，但可以转换为正确的类型
+
+  ```c
+  // 为什么要返回结构体引用
+  #include <iostream>
+  #include <string>
+  
+  using namespace std;
+  
+  struct Person {
+  
+      string name;
+      int age;
+  
+      const void print() {
+  
+          cout << name << " " << age << " " << this << endl;
+      }
+  };
+  
+  // 返回副本
+  Person getValue(Person p) {
+  
+      return p;
+  }
+  
+  // 返回引用
+  Person &getReference(Person &p) {
+  
+      return p;
+  }
+  
+  int main() {
+  
+      Person a = {"a", 25};
+      a.print();
+  
+      Person p = getValue(a);
+      p.print();
+  
+      p.name = "p";
+      p.age = 30;
+  
+      a.print();
+      p.print();
+  
+      cout << "..." << endl;
+  
+      Person &r = getReference(a);
+      r.print();
+  
+      r.name = "r";
+      r.age = 35;
+  
+      a.print();
+      r.print();
+  
+      return 0;
+  }
+  ```
+
+  返回值和返回引用的选择
+
+  | 情况           | 返回值类型 | 原因             |
+  | -------------- | ---------- | ---------------- |
+  | 创建新对象     | 返回值     | 必须创建新对象   |
+  | 链式调用       | 引用       | 连续操作同一对象 |
+  | 访问内部数据   | 引用       | 允许直接修改     |
+  | 避免大对象拷贝 | 引用       | 性能考虑         |
+  | 重载赋值运算符 | 引用       | 标准惯例         |
+  | 重载算术运算符 | 值         | 返回新对象       |
+
+## 默认参数
+
+默认参数是当函数调用中省略了实参时自动使用一个值
+
+```c
+void test(int a, int b = 3, int c = 4);
+```
+
+**只需要原型指定默认值**，则函数定义就不需要指定
+
+## 函数模板
+
+函数模板是通用的函数描述，可以泛型的定义函数
+
+```C++
+#include <iostream>
+
+using namespace std;
+
+template <typename AnyType>
+void swap(AnyType &a, AnyType &b) {
+
+    AnyType temp;
+    temp = a;
+    a = b;
+    b = temp;
+}
+```
+
 
 

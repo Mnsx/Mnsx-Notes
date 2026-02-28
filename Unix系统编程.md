@@ -609,4 +609,371 @@ int system(const char *command);
 
   **消息队列不适合表较大的数据的传输**
 
+  > `ftok()`是一个用于生成唯一IPC键值的函数（File to Key）
+  >
+  > 在需要进行进程通信时，它能把一个存在的文件路径和一个整数项目ID装换成一个唯一的键值（key_t类型）
+  >
+  > ```c
+  > key_t ftok(const char *pathname, int proj_id);
+  > ```
+  >
+  > * `pathname`: 一个**必须存在且进程可以访问**的文件路径
+  > * `proj_id`: 项目ID，**只有最低有效位8位（0-255）**
+  > * **返回值**: 成功时返回生成的`key_t`类型的IPC键值，失败时返回-1
   
+  **常用函数**
+  
+  ```c
+  int msgget(key_t key, int msgflg);
+  ```
+  
+  * `msgflg`用于控制消息队列的创建、访问权限以及特定操作行为
+  
+    * **创建/打开模式**
+  
+      `IPC_CREAT`: 若key不存在则创建新队列，存在则直接打开
+  
+      `IPC_CREAT | IPC_EXCL`: 若key存在则报错，确保创建的是新队列
+  
+      `0`: 仅当队列已存在时打开，不存在则报错 
+  
+    * **权限设定**
+  
+      包含9位的权限标识
+  
+    * **私有队列**
+  
+      如果配和`IPC_PRIVATE`使用，会初始化创建进程专有的队列，每次都会创建一个新的对象
+  
+  ```c
+  int msgsnd(int msqid, const void *msgp, size_t msgsz, int msgflg);
+  ```
+  
+  ```c
+  ssize_t msgrcv(int msqid, void *msgp, size_t msgsz, long msgtyp, int msgflg);
+  ```
+  
+  * 用于发送和接受消息，接受消息时如果队列中没有对应类型的消息，那么会阻塞进程等待接受消息
+  
+    * `msgflg`主要用于控制消息队列满时的发送行为
+  
+      `0`（默认值）: **阻塞方式**，如果消息队列满时，会一直阻塞，直到有足够空间容纳新消息，或消息队列被删除
+  
+      `IPC_NOWAIT`: **非阻塞方式**，如果消息队列满时，不会等待，而是立即返回-1，并将`errno`设置为`EAGAIN`
+  
+  ```c
+  int msgctl(int msqid, int cmd, struct msqid_ds *buf);
+  ```
+  
+  * `cmd`: 控制命令
+  
+    `IPC_STAT`: 获取消息队列的`msqid_ds`结构，并将其存入buf中
+  
+    `IPC_SET`: 根据buf指向的结构，设置消息队列的UID、GID、模式等属性
+  
+    `IPC_RMID`: 从内核中删除指定的消息队列
+  
+  * `struct msqid_ds *buf`
+  
+    ```c
+    struct msqid_ds {
+    
+        struct ipc_perm msg_perm;   // 拥有者关系和权限
+        time_t msg_stime;           // 最后发送时间
+        time_t msg_rtime;           // 最后接受时间
+        time_t msg_ctime;           // 最后修改时间
+        unsigned long __msg_cbytes; // 目前已经使用的字节数
+        msgqnum_t msg_qnum;         // 目前已经有的消息数量
+        msglen_t msg_qbytes;        // 最大允许的字节长度
+        pid_t msg_lspid;            // 最后发送消息的PID
+        pid_t msg_lrpid;            // 最后接受消息的PID
+    };
+    ```
+  
+  * **返回值**: 成功返回0，失败返回-1
+  
+  ```c
+  #include <stdio.h>
+  #include <sys/types.h>
+  #include <sys/ipc.h>
+  #include <sys/msg.h>
+  #include <string.h>
+  
+  struct msgBuf {
+  
+      long msgType;
+      char msgText[1024];
+  };
+  
+  int main() {
+  
+      // 创建十六进制数
+      key_t key = ftok("profile", 77);
+  
+      // 创建消息队列
+      int msgId = msgget(key, IPC_CREAT | IPC_PRIVATE);
+  
+      // 处理消息内容
+      struct msgBuf mb;
+      mb.msgType = 7;
+      strcpy(mb.msgText, "Hello world!");
+  
+      // 发送消息
+      msgsnd(msgId, &mb, sizeof(mb), 0);
+  
+      return 0;
+  }
+  ```
+  
+  ```c
+  #include <stdio.h>
+  #include <sys/types.h>
+  #include <sys/ipc.h>
+  #include <sys/msg.h>
+  #include <string.h>
+  
+  struct msgBuf {
+  
+      long msgType;
+      char msgText[1024];
+  };
+  
+  int main() {
+  
+      // 获取消息队列
+      key_t key = ftok("profile", 77);
+      int msgId = msgget(key, IPC_PRIVATE);
+  
+      // 接受消息
+      struct msgBuf mb;
+      msgrcv (msgId, &mb, sizeof(mb), 7, 0);
+  
+      printf("%s\n", mb.msgText);
+  
+      return 0;
+  }
+  ```
+  
+* **共享内存**
+
+  共享内存相对于消息队列**减少了用户态和内核态之间的消息拷贝过程**
+
+  每个进程都会维护一个从内存地址到虚拟内存页面之间的映射关系
+
+  **访问共享内存区域和访问进程独有的内存区域一样快**
+
+  但是需要应用程序子集做互斥
+
+  ```c
+  int shmget(key_t key, size_t size, int shmflg);
+  ```
+
+  * `shmflg`用于设定共享内存的创建模式、存储权限以及特殊操作行为
+
+    `IPC_CREAT`: 如果不存在与key相同的共享内存，则新建，如果存在则返回现有的共享内存的标识
+
+    `IPC_EXCL`: 和`IPC_CREAT`配合使用，如果key确定共享内存存在，则返回失败，这样强制创建全新的共享内存
+
+    存储权限模式：通常以八进制数标识
+
+    `SHM_HUGETLB`: 使用[大页面]来分配共享内存，以提高内存提效率（大于预设的4KB）
+
+    `SHM_NORESERVE`: 不在交换分区中为这块共享内存保留空间
+
+  ```c
+  void *shmat(int shmid, const void *shmaddr, int shmflg);
+  ```
+
+  * `shmaddr`通常设置为NULL，则系统会自动分配合适的内存空间
+
+  * `shmflg`用于控制共享内存隐射到调用过程地址空间的方式及访问权限
+
+    `0`（默认）: 共享内存以读写模式隐射，且**shmaddr必须为NULL**
+
+    `SHM_RDONLY`: 以只读方式隐射共享内存
+
+    `SHM_RND`: 配合`shmaddr`参数使用，将地址自动向上取整到内存也边界
+
+    `SHM_REMAP`: 替换由`shmaddr`指定的当前隐射（需要和`shmaddr`非空配合使用）
+
+  ```c
+  int shmdt(const void *shmaddr);
+  ```
+
+  用于释放共享内存区域
+
+  ```c
+  #include <stdio.h>
+  #include <sys/ipc.h>
+  #include <sys/shm.h>
+  #include <string.h>
+  
+  int main() {
+  
+      // 获取共享内存
+      int shmId = shmget(ftok("profile", 77), 1024, IPC_CREAT);
+      
+      // 获取共享内存地址
+      void *addr = shmat(shmId, NULL, 0);
+  
+      // 写入
+      strcpy((char *)addr, "Hello world");
+  
+      // 释放共享内存
+      shmdt(addr);
+  
+      return 0;
+  }
+  ```
+
+  ```c
+  #include <stdio.h>
+  #include <sys/ipc.h>
+  #include <sys/shm.h>
+  #include <string.h>
+  
+  int main() {
+  
+      // 获取共享内存
+      int shmId = shmget(ftok("profile", 77), 1024, IPC_CREAT);
+      
+      // 获取共享内存地址
+      void *addr = shmat(shmId, NULL, 0);
+  
+      // 读取
+      printf("%s\n", (char *)addr);
+  
+      // 释放共享内存
+      shmdt(addr);
+  
+      return 0;
+  }
+  ```
+
+* **信号**
+
+  进程通过调用`kill()`向其他进程发送一个信号，成功返回0，失败返回-1
+
+  ```c
+  int kill(pid_t pid, int sig);
+  ```
+
+  通过`signal()`对信号进行捕获操作
+
+  ```c
+  sighandler_t signal(int signum, sighandler_t handler);
+  ```
+
+  准备捕获的信号为sig参数，接收到指定信号后将要调用的函数由func指定，还可以通过`SIG_IGN`去忽略信号
+
+  ```c
+  #include <stdio.h>
+  #include <signal.h>
+  
+  void fun(int sigNum) {
+  
+      printf("%d\n", sigNum);
+  }
+  
+  int main() {
+  
+      // signal(SIGINT, fun);
+      signal(SIGINT, SIG_IGN);
+      while (1);
+  
+      return 0;
+  }
+  ```
+
+* **区别**
+
+  | IPC方式  | 通信类型      | 数据量 | 同步方式   | 通信方向 | 适用范围      |
+  | -------- | ------------- | ------ | ---------- | -------- | ------------- |
+  | 无名管道 | 字节流        | 小     | 自带阻塞   | 单向     | 父子/亲缘进程 |
+  | 有名管道 | 字节流        | 小     | 自带阻塞   | 单向     | 任何进程      |
+  | 消息列表 | 结构化消息    | 中     | 可选阻塞   | 双向     | 任何进程      |
+  | 共享内存 | 内存数据      | 大     | 需额外同步 | 双向     | 任何进程      |
+  | 信号     | 事件通知      | 极小   | 异步       | 单向     | 任何进程      |
+  | Socket   | 字节流/数据报 | 大     | 自带阻塞   | 双向     | 跨网          |
+
+# 线程
+
+## 线程的定义
+
+线程是进程内的轻量级执行单元，具备独立的执行流
+
+同时与同一进程内的其他线程共享以下资源
+
+* 虚拟内存空间（代码段、数据段、堆）
+* 文件描述符表、信号处理（部分）
+* 进程ID、用户ID等进程级属性
+
+> pthread_t含义
+>
+> pthread_t是线程的唯一标识符，类型可能是整数、指针或结构体（依赖系统实现），不能直接用printf输出，需要使用`pthread_self())`获取当前线程ID，或通过`pthread_equal(tid1, tid2)`比较ID是否相同
+
+## 线程的使用
+
+* 创建线程
+
+  ```c
+  int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine) (void *), void *arg);
+  ```
+
+  `返回值`: 如果创建成功返回0，如果创建失败返回错误码
+
+  `pthread_t *thread`:  存储新线程的ID
+
+  `const pthread_attr_t *attr`: 线程属性，NULL表示默认属性
+
+  `void *(*start_routine) (void *)`: 线程执行函数
+
+  `void *arg`: 线程执行函数中的参数 
+
+  > 新线程从`start_routine`函数开始执行，共享进程的虚拟内存空间，线程函数的参数`args`可传递任意类型数据
+
+* 终止线程
+
+  **正常终止: **
+
+  1. 线程函数`return`: 返回值作为线程的退出状态
+  2. 调用`pthread_exit(void *retval)`: 显式终止线程，`retval`作为退出状态
+
+  **异常终止:**
+
+  1. 取消线程，通过`pthread_cancel(tid)`向线程发送取消请求，线程可注册取消处理函数`pthread_setcancelhandler`，清理资源后终止
+  2. 进程退出，进程调用`exit()`，所有线程会立即终止，可能导致资源泄露
+
+* 连接线程
+
+  ```c
+  int pthread_join(pthread_t thread, void **retval);
+  ```
+
+  用于回收可结合线程的资源，阻塞父线程直到目标线程终止，获取其退出状态`retval`
+
+  若线程处于可结合状态且未被join，会成为僵尸线程，占用资源
+
+* 线程分离
+
+  分离状态的线程终止时，资源会被内核自动回收，无需`pthread_join`，适合无需同步退出状态的线程（后台守护线程）
+
+  ```c
+  // 创建分离状态
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+  // 设置分离状态
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED); 
+  pthread_create(&tid, &attr, thread_func, NULL);
+  pthread_attr_destroy(&attr);
+  
+  // 线程创建后，调用detach设置分离状态 
+  pthread_detach(tid) 
+  ```
+
+## 线程重要属性
+
+* 分离状态：`PTHREAD_CREATE_JOINABLE`（默认）或`PTHREAD_CREATE_DETACHED`
+* 栈大小：通过`pthread_attr_setstacksize`设置线程栈大小
+* 调整策略：`SCHED_FIFO`、`SCHED_RR`，配合优先级控制线程调度
+
