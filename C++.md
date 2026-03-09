@@ -1195,3 +1195,572 @@ public:
 };
 ```
 
+# 文件输入输出
+
+C++的文件输入输出通过`<fstream>`头文件提供的`ifstream`、`ofstream`、`fstream`三个类实现
+
+## 快速上手
+
+### 写文件
+
+默认模式`ios::out`会**清空原有文件内容**，如果想要追加内容需要使用`ios::app`
+
+```c++
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+int main() {
+        // 创建写文件流对象，默认覆盖原有内容
+        ofstream fout("test.txt", ios::out);
+        // 检查文件是否打开成功
+        if (!fout.is_open()) {
+                return 1; // 实例代码不处理错误
+        }
+        // 写文件和cout类似
+        fout << "Hello" << endl;
+        // 关闭文件
+        fout.close();
+        return 0;
+}
+```
+
+### 读文件
+
+读文件分为按行读、按字符读、按空格分隔读三种常见方式
+
+`getline(fin, line)`是**读文本文件的首选**
+
+读完文件后，流状态会被标记为`EOF`，需要使用`fin.clear()`重置，在使用`fin.seekg(0)`移到开头，才能重新读
+
+`fin >> word`会自动跳过空格、换行、制表符，适合读取结构化数据
+
+```c++
+#include <iostream>
+#include <fstream>
+#include <string>
+using namespace std;
+
+int main() {
+        // 创建读文件流
+        ifstream fin("test.txt", ios::in);
+        if (!fin.is_open()) {
+                return 1;
+        }
+        // 按行读
+        string line;
+        // 读取一行数据，返回false表示到文件末尾
+        while (!getline(fin, line)) {
+                return 1;
+        }
+        // 重置文件指针
+        fin.clear();
+        fin.seekg(0);
+        // 按空格分隔读
+        string word;
+        while (!(fin >> word)) {
+                return 1;
+        }
+        fin.clear();
+        fin.seekg(0);
+        // 按字符读
+        char ch;
+        while (!fin.get(ch)) {
+                return 1;
+        }
+        fin.close();
+        return 0;
+}
+```
+
+### 二进制文件读写
+
+二进制模式需要加`ios::binary`，避免系统转换换行符
+
+`write`/`read`接收`char *`类型，需要强制转换数据地址
+
+二进制读写适合存储结构化数据
+
+```c++
+#include <iostream>
+#include <fstream>
+#include <string>
+using namespace std;
+
+struct Test {
+        int a;
+        double b;
+        string c;
+};
+
+int main() {
+        // 写二进制文件
+        ofstream fout_bin("test.bin", ios::out | ios::binary);
+        if (!fout_bin) {
+                return 1;
+        }
+        Test t1 = {1, 1.1, "a"};
+        // write写入二进制数据，param1数据地址，param2数据字节数
+        fout_bin.write((char *) & t1, sizeof(Test));
+        fout_bin.close();
+        // 读二进制文件
+        ifstream fin_bin("test.bin", ios::in | ios::binary);
+        if (!fin_bin) {
+                return 1;
+        }
+        Test t2;
+        // read读取二进制数据，param1存储地址，param2数据字节数
+        fin_bin.read((char *)&t2, sizeof(Test));
+        cout << t2.a << " " << t2.b << " " << t2.c << endl;
+        fin_bin.close();
+        return 0;
+}
+```
+
+### 注意事项
+
+* **文件打开检查**：必须使用`is_open()`或`!object`检查文件是否打开成功
+* **关闭文件**：虽然类会使用析构函数自动关闭，但还是推荐显式调用`close()`
+* **流状态**：如果读写失败，流会进入错误状态，需要使用`clear()`重置
+* **编码问题**：默认读写的是ASCII/ANSI编码，读写UTF-8文件需要注意
+
+# 数据库连接
+
+## 快速上手
+
+* **封装连接**
+
+  ```c++
+  // 数据库连接参数
+  const char* HOST = "127.0.0.1"; // 数据库地址（本地填127.0.0.1）
+  const char* USER = "root";      // 用户名
+  const char* PWD = "你的MySQL密码"; // 密码
+  const char* DB_NAME = "test_db"; // 数据库名
+  unsigned int PORT = 3306;       // 端口（默认3306）
+  
+  // 连接数据库，返回MYSQL句柄（失败返回NULL）
+  MYSQL* connect_mysql() {
+      // 1. 初始化MySQL句柄
+      MYSQL* mysql = mysql_init(nullptr);
+      if (mysql == nullptr) {
+          cout << "初始化MySQL失败：" << mysql_error(mysql) << endl;
+          return nullptr;
+      }
+  
+      // 2. 连接数据库
+      if (!mysql_real_connect(mysql, HOST, USER, PWD, DB_NAME, PORT, nullptr, 0)) {
+          cout << "连接数据库失败：" << mysql_error(mysql) << endl;
+          mysql_close(mysql); // 关闭句柄
+          return nullptr;
+      }
+  
+      // 3. 设置字符集（避免中文乱码）
+      mysql_set_character_set(mysql, "utf8mb4");
+      cout << "数据库连接成功！" << endl;
+      return mysql;
+  }
+  ```
+
+* **执行SQL语句**
+
+  * **增**
+
+    ```c++
+    // 新增用户
+    bool insert_user(MYSQL* mysql, const string& name, int age) {
+        // 拼接SQL语句（注意：实际项目避免直接拼接，用预处理语句防SQL注入！）
+        string sql = "INSERT INTO user(name, age) VALUES ('" + name + "', " + to_string(age) + ")";
+        
+        // 执行SQL语句（mysql_query返回0表示成功）
+        if (mysql_query(mysql, sql.c_str())) {
+            cout << "新增失败：" << mysql_error(mysql) << endl;
+            return false;
+        }
+    
+        // 获取新增数据的自增ID（可选）
+        cout << "新增成功，自增ID：" << mysql_insert_id(mysql) << endl;
+        return true;
+    }
+    ```
+
+  * **查**
+
+    使用`mysql_query`执行简单的SQL查询
+
+    ```c++
+    if (mysql_query(conn, "SELECT * FROM table_name")) {
+        ... // mysql_error(conn)可以返回错误信息
+    }
+    ```
+
+    使用`mysql_store_result`或`mysql_use_result`获取查询结果
+
+    `mysql_store_result`会将整个结果集加载到内存中，**适用于结果集较小的情况**
+
+    `mysql_use_result`逐行处理结果集，**适用于结果集较大的情况**
+
+    ```c++
+    // 查询所有用户
+    void query_all_user(MYSQL* mysql) {
+        string sql = "SELECT id, name, age FROM user";
+        if (mysql_query(mysql, sql.c_str())) {
+            cout << "查询失败：" << mysql_error(mysql) << endl;
+            return;
+        }
+    
+        // 获取结果集
+        MYSQL_RES* res = mysql_store_result(mysql);
+        if (res == nullptr) {
+            cout << "获取结果集失败：" << mysql_error(mysql) << endl;
+            return;
+        }
+    
+        // 获取字段数（列数）
+        int col_num = mysql_num_fields(res);
+        // 遍历结果集（行）
+        MYSQL_ROW row;
+        cout << "\n===== 用户列表 =====" << endl;
+        while ((row = mysql_fetch_row(res)) != nullptr) {
+            // 遍历每一列
+            for (int i = 0; i < col_num; i++) {
+                cout << (row[i] ? row[i] : "NULL") << "\t";
+            }
+            cout << endl;
+        }
+    
+        // 释放结果集（必须释放，避免内存泄漏）
+        mysql_free_result(res);
+    }
+    
+    // 按ID查询单个用户
+    void query_user_by_id(MYSQL* mysql, int id) {
+        string sql = "SELECT name, age FROM user WHERE id = " + to_string(id);
+        if (mysql_query(mysql, sql.c_str())) {
+            cout << "查询失败：" << mysql_error(mysql) << endl;
+            return;
+        }
+    
+        MYSQL_RES* res = mysql_store_result(mysql);
+        if (res == nullptr || mysql_num_rows(res) == 0) {
+            cout << "未找到ID为" << id << "的用户" << endl;
+            mysql_free_result(res);
+            return;
+        }
+    
+        MYSQL_ROW row = mysql_fetch_row(res);
+        cout << "\n===== 查询结果 =====" << endl;
+        cout << "ID：" << id << "\t姓名：" << row[0] << "\t年龄：" << row[1] << endl;
+        mysql_free_result(res);
+    }
+    ```
+
+  * **删**
+
+    ```c++
+    // 删除用户（按ID）
+    bool delete_user(MYSQL* mysql, int id) {
+        string sql = "DELETE FROM user WHERE id = " + to_string(id);
+        if (mysql_query(mysql, sql.c_str())) {
+            cout << "删除失败：" << mysql_error(mysql) << endl;
+            return false;
+        }
+    
+        int affected_rows = mysql_affected_rows(mysql);
+        if (affected_rows == 0) {
+            cout << "无用户被删除（ID不存在）" << endl;
+            return false;
+        }
+        cout << "删除成功，受影响行数：" << affected_rows << endl;
+        return true;
+    }
+    ```
+
+  * **改**
+
+    ```c++
+    // 修改用户信息（按ID改年龄）
+    bool update_user_age(MYSQL* mysql, int id, int new_age) {
+        string sql = "UPDATE user SET age = " + to_string(new_age) + " WHERE id = " + to_string(id);
+        if (mysql_query(mysql, sql.c_str())) {
+            cout << "修改失败：" << mysql_error(mysql) << endl;
+            return false;
+        }
+    
+        // 获取受影响的行数
+        int affected_rows = mysql_affected_rows(mysql);
+        if (affected_rows == 0) {
+            cout << "无用户被修改（ID不存在）" << endl;
+            return false;
+        }
+        cout << "修改成功，受影响行数：" << affected_rows << endl;
+        return true;
+    }
+    ```
+
+* **关闭数据库**
+
+  ```c++
+  mysql_close(conn);
+  ```
+
+* **执行编译**
+
+  ```shell
+  g++ test.cpp -lmysqlclient
+  ```
+
+  **需要连接mysqlclient库**
+
+# C++新特性
+
+## 自动类型推断
+
+使用`auto`关键字，用于自动推断变量的类型，这让变量的类型可以根据其初始化值自动推断
+
+| 场景               | auto 推导结果              | 示例                                          |
+| ------------------ | -------------------------- | --------------------------------------------- |
+| 初始化值是普通变量 | 去掉引用 /const 的原始类型 | `const int x = 5; auto y = x;` → y 是 int     |
+| 初始化值是引用     | 推导为原始类型（不是引用） | `int x=5; int& ref=x; auto z=ref;` → z 是 int |
+| 初始化值是指针     | 推导为对应指针类型         | `int* p=&x; auto q=p;` → q 是 int*            |
+
+`decltype`关键字直接返回表达式的精确类型（**保留引用/const/volatile**）
+
+**优先使用auto的场景**
+
+* 简化STL迭代器声明
+* 声明复杂类型变量（Lambda表达式，模板类型...）
+* 表达式结果类型不明确时
+
+**避免使用auto的场景**
+
+* 变量类型需要明确的场景（接口参数、对外暴露函数返回值...）
+* 初始化值时字面量且类型易混淆时（auto x = 1 无法推断long或int）
+* 数组类型推断（auto arr = {1, 2, 3}，会被推断为`initializer_list<int>`）
+
+## 范围for循环
+
+范围for循环提供了遍历容器或数组的方式，无需使用迭代器或指针
+
+**范围for循环**本质是**编译器自动编写迭代器遍历逻辑**，所以需要支持`begin()`和`end()`的类型，自定义实现的类
+
+```c++
+std::vector<int> v = {1, 2, 3, 4, 5};
+for (auto it : v) {
+    std::cout << it << std::endl;
+}
+```
+
+## Lambda表达式
+
+Lambda表达式允许在代码中定义匿名函数，简化了函数对象的使用
+
+Lambda表达式本质**是一个可调用对象**
+
+`[]`是核心标识
+
+```c++
+[capture](parameters) mutable -> return_type {
+    ...
+}
+[capture] {
+    ...
+}
+```
+
+`[capture]`表示捕获变量，分为**按值捕获**和**按引用捕获**
+
+* **按值捕获**，捕获的变量默认只读
+
+```c++
+int x = 10, y = 20;
+auto fun = [x, y]() {
+    cout << x + y;
+};
+```
+
+* **按引用捕获**，引用外部变量，可以修改原变量
+
+```c++
+int x = 10, y = 20;
+auto fun = [&x, &y]() {
+    x++;y++;
+}
+```
+
+* **简化捕获**
+
+```c++
+int x = 10, y = 20;
+auto fun = [=]() {
+    ... // 按值捕获
+};
+auto fun = [&]() {
+    ... // 按引用捕获
+}
+```
+
+按值捕获的变量默认是只读的，加`mutable`可修改副本**（不影响原变量）**
+
+## 右值引用和移动语义
+
+### 右值和左值的区别
+
+| 类型 | 核心特征                            | 示例                                                         |
+| ---- | ----------------------------------- | ------------------------------------------------------------ |
+| 左值 | 能取地址、有名字、生命周期持久      | 变量（`int a=10;` 中的 `a`）、数组、对象                     |
+| 右值 | 不能取地址、无名字、临时创建 / 销毁 | 字面量（`10`、`"hello"`）、表达式结果（`a+b`）、函数返回的临时对象 |
+
+### 右值引用
+
+右值引用的语法是`&&`，专门用来绑定**右值（临时对象）**，**不能绑定左值**
+
+右值引用的主要是为了抓住临时变量，能够对其进行**资源转移**（而不是拷贝）
+
+### 移动语义
+
+移动语义的精髓在于**偷资源而不是拷贝**
+
+核心的问题在于传统拷贝的性能浪费，当用临时对象初始化/赋值给另一个对象时，传统做法是拷贝整个资源，这种操作对大对象是巨大的性能消耗
+
+**移动语义解决的思路在于转移资源所有权**，通过**移动构造函数**和**移动赋值运算符**，可以直接转移临时对象的资源
+
+```c++
+// 移动构造函数（处理右值）
+Test(Test && t) noexcept {
+    // 直接投资源，复制指针，而非重新分配内存
+    this->data = t.data;
+    this->data = t.data;
+    // 让原对象（临时对象）的指针置空，避免析构时重复释放
+    t.data = nullptr;
+    t.size = 0;
+}
+// 移动赋值运算符
+Test & operator = (Test && t) noexcept {
+    if (this == &t) {
+        return *this;
+    }
+    // 释放当前对象的资源
+    if (this->data) {
+        delete[] this->data;
+    }
+    // 转移资源
+    this->data = t->data;
+    this->size = t->size;
+    t.data = nullptr;
+    t.size = 0;
+    
+    return *this;
+}
+```
+
+### std::move
+
+通常需要对左值也出发移动语义，可以使用`std::move`，他的作用在于**将左值转换为右值引用**
+
+```c++
+Test t("hello"); // 左值
+Test a = std::move(t); // 将t转换为右值，触发移动构造
+// 此时t中的资源已经被转移，不能再使用
+```
+
+### 核心使用场景
+
+* STL容器优化
+
+  STL容器已经实现了移动语义，直接使用`std::move`移动容器资源
+
+  ```c++
+  vector<int> v1(10000000);
+  vector<int> v2 = std::move(v1);
+  ```
+
+* 函数返回大对象
+
+  函数返回大对象时，编译器会自动优化移动
+
+  ```c++
+  Test fun() {
+      Test t("hello");
+      return t; // 自动触发移动构造
+  }
+  ```
+
+* 容器插入元素
+
+  用`emplace_back`/`std::move`替代`push_back`，避免拷贝
+
+  ```c++
+  vector<Test> v;
+  Test t("hello");
+  v.push_back(std::move(s)); // 移动插入
+  ```
+
+### 关键规则
+
+1. **移动构造/赋值必须加`noexcept`**：
+
+   STL容器扩容时，会优先使用`noexcept`的移动构造，否则退化为拷贝构造
+
+2. **移动后原对象不可用**：
+
+   被移动的对象（无论是右值还是`std::move`后的左值），访问其资源会导致未定义行为
+
+3. **并非所有对象都适合移动**
+
+   只有拥有**动态资源**的对象（堆内存、文件句柄、套接字）才需要移动语义，简单类型移动和拷贝性能无差异
+
+## nullptr关键字
+
+nullptr是一个新的空指针常量，用于替代NULL或0，提高代码的可读性和类型安全性
+
+## 初始化列表
+
+C++引入初始化语法，使用花括号进行初始化，适用于各种类型的对象
+
+初始化列表的表示是`{}`，核心作用是**用一组值初始化对象、变量**
+
+1. 基础类型初始化（替代`=`赋值）
+
+   ```c++
+   int a{1};
+   int b{}; // 空初始化，默认为0，比int c;安全，避免随机值
+   ```
+
+2. 数组初始化
+
+   ```c++
+   int arr1[3]{1, 2, 3};
+   int arr2{};
+   ```
+
+3. STL容器初始化
+
+   初始化列表彻底简化了STL容器的初始化
+
+   ```c++
+   vector<int> v{1, 2, 3}; // 替代多次push_back
+   ```
+
+4. 自定义类的初始化列表（构造函数初始化列表）
+
+   ```c++
+   class A {
+   private:
+       int b;
+       string c;
+       const int d; // const成员必须用初始化列表初始化
+   public:
+       A(int b, string c, int d) : b(b), c(c)， d(d) {}
+   };
+   int main() {
+       A a{1, "hello", 2};
+       return 0;
+   }
+   ```
+
+使用初始化列表可以**避免窄化转换**，初始化列表会禁止**精度丢失的类型转换**，但是传统的`=`赋值允许
+
+构造函数初始化列表的书写顺序不会影响初始化顺序，**初始化列表的顺序和类成员声明顺序应该一致**
+
+## 线程支持库
+
