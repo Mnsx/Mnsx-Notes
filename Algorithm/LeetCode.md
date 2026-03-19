@@ -423,3 +423,204 @@ int strStr(string haystack, string needle) {
 > 给定一个数组 `nums`，编写一个函数将所有 `0` 移动到数组的末尾，同时保持非零元素的相对顺序。
 >
 > **请注意** ，必须在不复制数组的情况下原地对数组进行操作。
+
+```c++
+void moveZeroes(vector<int>& nums) {
+
+    int z = nums.size() - 1;
+    for (int i = 0; i < nums.size() && i <= z; ++i) {
+
+        if (nums[i] == 0) {
+
+            for (int j = i; j < z; ++j) {
+
+                nums[j] = nums[j + 1];
+            }
+            nums[z--] = 0;
+            i--;
+        }
+    }
+}
+```
+
+```c++
+void moveZeroes(vector<int>& nums) {
+
+    int n = nums.size(), left = 0, right = 0;
+    while (right < n) {
+
+        if (nums[right] != 0) {
+
+            swap(nums[left], nums[right]);
+            left++;
+        }
+        right++;
+    }
+}
+```
+
+## 35. 搜索插入位置
+
+> 给定一个排序数组和一个目标值，在数组中找到目标值，并返回其索引。如果目标值不存在于数组中，返回它将会被按顺序插入的位置。
+>
+> 请必须使用时间复杂度为 `O(log n)` 的算法。
+
+```c++
+int searchInsert(vector<int>& nums, int target) {
+
+    int left = 0, right = nums.size() - 1, res = 0;
+    while (left < right) {
+
+        int mid = left + (right - left) / 2;
+        cout << mid << " " << left << " " << right << endl;
+        if (nums[mid] > target) {
+
+            right = mid - 1;
+            res = left;
+        } else if (nums[mid] < target) {
+
+            left = mid + 1;
+            res = right;
+        } else {
+
+            return mid;
+        }
+    }
+    return target > nums[res] ? res + 1 : res;
+}
+```
+
+## 344. 反转字符串
+
+> 编写一个函数，其作用是将输入的字符串反转过来。输入字符串以字符数组 `s` 的形式给出。
+>
+> 不要给另外的数组分配额外的空间，你必须**[原地](https://baike.baidu.com/item/原地算法)修改输入数组**、使用 O(1) 的额外空间解决这一问题。
+
+```c++
+void reverseString(vector<char>& s) {
+
+    int left = 0, right = s.size() - 1;
+    while (left < right) {
+
+        swap(s[left++], s[right--]);
+    }
+}
+```
+
+## 541. 反转字符串II
+
+> 给定一个字符串 `s` 和一个整数 `k`，从字符串开头算起，每计数至 `2k` 个字符，就反转这 `2k` 字符中的前 `k` 个字符。
+>
+> - 如果剩余字符少于 `k` 个，则将剩余字符全部反转。
+> - 如果剩余字符小于 `2k` 但大于或等于 `k` 个，则反转前 `k` 个字符，其余字符保持原样。
+
+```c++
+string reverseStr(string s, int k) {
+    int cur = 0, left = 0, right = k - 1;
+    int flag = 0;
+    while (right < s.size()) {
+
+        if (flag == 0) {
+
+            while (left < right) {
+
+                swap(s[left++], s[right--]);
+            }
+            flag = 1;
+        } else {
+
+            flag = 0;
+        }
+        cur += k;
+        left = cur;
+        right = left + k - 1;
+    }
+    if (flag == 0) {
+
+        right = s.size() - 1;
+        while (left < right) {
+
+            swap(s[left++], s[right--]);
+        }
+    }
+    return s;
+}
+```
+
+## 125. 验证回文串
+
+> 如果在将所有大写字符转换为小写字符、并移除所有非字母数字字符之后，短语正着读和反着读都一样。则可以认为该短语是一个 **回文串** 。
+>
+> 字母和数字都属于字母数字字符。
+>
+> 给你一个字符串 `s`，如果它是 **回文串** ，返回 `true` ；否则，返回 `false` 。
+
+```c++
+bool isPalindrome(string s) {
+    if (s.size() == 0) {
+
+        return true;
+    }
+
+    int left = 0, right = s.size() - 1;
+    while (left < right) {
+
+        while (left < right && !isdigit(s[left]) && !isupper(s[left]) && !islower(s[left])) {
+
+            left++;
+        }
+
+        while (left < right && !isdigit(s[right]) && !isupper(s[right]) && !islower(s[right])) {
+
+            right--;
+        }
+
+        if (s[left] <= 90 && s[left] >= 65) {
+
+            s[left] += 32;
+        }
+
+        if (s[right] <= 90 && s[right] >= 65) {
+
+            s[right] += 32;
+        }
+
+        if (s[left] != s[right]) {
+
+            return false;
+        }
+
+        left++;
+        right--;
+    }
+
+    return true;
+}
+```
+
+## 387. 字符串中的第一个唯一字符
+
+> 给定一个字符串 `s` ，找到 *它的第一个不重复的字符，并返回它的索引* 。如果不存在，则返回 `-1` 。
+
+```c++
+int firstUniqChar(string s) {
+        unordered_map<char, int> um;
+        for (int i = 0; i < s.size(); ++i) {
+
+            um[s[i]] += 1;
+        }
+        for (int i = 0; i < s.size(); ++i) {
+
+            if (um[s[i]] == 1) {
+
+                return i;
+            }
+        }
+        return -1;
+    }
+```
+
+## 349. 两个数组的交集
+
+> 给定两个数组 `nums1` 和 `nums2` ，返回 *它们的 交集* 。输出结果中的每个元素一定是 **唯一** 的。我们可以 **不考虑输出结果的顺序** 。
+
