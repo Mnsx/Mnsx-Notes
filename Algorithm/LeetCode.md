@@ -604,23 +604,205 @@ bool isPalindrome(string s) {
 
 ```c++
 int firstUniqChar(string s) {
-        unordered_map<char, int> um;
-        for (int i = 0; i < s.size(); ++i) {
+    unordered_map<char, int> um;
+    for (int i = 0; i < s.size(); ++i) {
 
-            um[s[i]] += 1;
-        }
-        for (int i = 0; i < s.size(); ++i) {
-
-            if (um[s[i]] == 1) {
-
-                return i;
-            }
-        }
-        return -1;
+        um[s[i]] += 1;
     }
+    for (int i = 0; i < s.size(); ++i) {
+
+        if (um[s[i]] == 1) {
+
+            return i;
+        }
+    }
+    return -1;
+}
 ```
 
 ## 349. 两个数组的交集
 
 > 给定两个数组 `nums1` 和 `nums2` ，返回 *它们的 交集* 。输出结果中的每个元素一定是 **唯一** 的。我们可以 **不考虑输出结果的顺序** 。
 
+```c++
+vector<int> intersection(vector<int>& nums1, vector<int>& nums2) {
+    sort(nums1.begin(), nums1.end());
+    sort(nums2.begin(), nums2.end());
+    vector<int> res;
+    int i = 0, j = 0;
+    while (i < nums1.size() && j < nums2.size()) {
+
+        while (i < nums1.size() - 1 && nums1[i] == nums1[i + 1]) {
+
+            i++;
+        }
+        while (j < nums2.size() - 1 && nums2[j] == nums2[j + 1]) {
+
+            j++;
+        }
+
+        if (nums1[i] == nums2[j]) {
+
+            res.push_back(nums1[i]);
+            i++;
+        } else if (nums1[i] > nums2[j]) {
+
+            j++;
+        } else {
+
+            i++;
+        }
+    }
+    return res;
+}
+```
+
+## 167. 两数之和II - 输入有序数组
+
+> 给你一个下标从 **1** 开始的整数数组 `numbers` ，该数组已按 **非递减顺序排列** ，请你从数组中找出满足相加之和等于目标数 `target` 的两个数。如果设这两个数分别是 `numbers[index1]` 和 `numbers[index2]` ，则 `1 <= index1 < index2 <= numbers.length` 。
+>
+> 以长度为 2 的整数数组 `[index1, index2]` 的形式返回这两个整数的下标 `index1` 和 `index2`。
+>
+> 你可以假设每个输入 **只对应唯一的答案** ，而且你 **不可以** 重复使用相同的元素。
+>
+> 你所设计的解决方案必须只使用常量级的额外空间。
+
+```c++
+vector<int> twoSum(vector<int>& numbers, int target) {
+    int i = 0, j = numbers.size() - 1;
+    while (i < j) {
+
+        if (numbers[i] + numbers[j] == target) {
+
+            return {i + 1, j + 1};
+        } else if (numbers[i] + numbers[j] < target) {
+
+            i++;
+        } else {
+
+            j--;
+        }
+    }
+    return {};
+}
+```
+
+## 88. 合并两个有序数组
+
+> 给你两个按 **非递减顺序** 排列的整数数组 `nums1` 和 `nums2`，另有两个整数 `m` 和 `n` ，分别表示 `nums1` 和 `nums2` 中的元素数目。
+>
+> 请你 **合并** `nums2` 到 `nums1` 中，使合并后的数组同样按 **非递减顺序** 排列。
+>
+> **注意：**最终，合并后数组不应由函数返回，而是存储在数组 `nums1` 中。为了应对这种情况，`nums1` 的初始长度为 `m + n`，其中前 `m` 个元素表示应合并的元素，后 `n` 个元素为 `0` ，应忽略。`nums2` 的长度为 `n` 。
+
+```c++
+void merge(vector<int>& nums1, int m, vector<int>& nums2, int n) {
+    int i = m - 1, j = n - 1, cur = m + n - 1;
+    while (i >= 0 && j >= 0) {
+
+        if (nums1[i] > nums2[j]) {
+
+            nums1[cur--] = nums1[i--];
+        } else {
+
+            nums1[cur--] = nums2[j--];
+        }
+    }
+    while (i >= 0) {
+
+        nums1[cur--] = nums1[i--];
+    }
+    while (j >= 0) {
+        nums1[cur--] = nums2[j--];
+    }
+}
+```
+
+## 53. 最大子数组和
+
+> 给你一个整数数组 `nums` ，请你找出一个具有最大和的连续子数组（子数组最少包含一个元素），返回其最大和。
+>
+> **子数组**是数组中的一个连续部分。
+
+```c++
+int maxSubArray(vector<int>& nums) {
+    int len = nums.size();
+    int arr[len];
+    for (int i = 1; i < len; ++i) {
+
+        arr[i] = INT_MIN;
+    }
+    arr[0] = nums[0];
+    for (int i = 1; i < len; ++i) {
+
+        if (nums[i] + arr[i - 1] > nums[i]) {
+
+            arr[i] = nums[i] + arr[i - 1];
+        } else {
+
+            arr[i] = nums[i];
+        }
+    }
+    int max = INT_MIN;
+    for (auto a : arr) {
+
+        if (a > max) {
+
+            max = a;
+        }
+    }
+    return max;
+}
+```
+
+## 121. 买股票的最佳时机
+
+> 给定一个数组 `prices` ，它的第 `i` 个元素 `prices[i]` 表示一支给定股票第 `i` 天的价格。
+>
+> 你只能选择 **某一天** 买入这只股票，并选择在 **未来的某一个不同的日子** 卖出该股票。设计一个算法来计算你所能获取的最大利润。
+>
+> 返回你可以从这笔交易中获取的最大利润。如果你不能获取任何利润，返回 `0` 。
+
+```c++
+int maxProfit(vector<int>& prices) {
+    int len = prices.size();
+    int arr[len];
+    arr[0] = -prices[0];
+    int res = INT_MIN;
+    for (int i = 1; i < len; ++i) {
+
+        if (-prices[i] > arr[i - 1]) {
+
+            arr[i] = -prices[i];
+        } else {
+
+            arr[i] = arr[i - 1];
+        }
+
+        if (arr[i - 1] + prices[i] > res) {
+
+            res = arr[i - 1] + prices[i];
+        }
+    }
+    return res > 0 ? res : 0;
+}
+```
+
+## 217. 存在重复元素
+
+> 给你一个整数数组 `nums` 。如果任一值在数组中出现 **至少两次** ，返回 `true` ；如果数组中每个元素互不相同，返回 `false` 。
+
+```c++
+bool containsDuplicate(vector<int>& nums) {
+    unordered_map<int, int> um;
+    for (auto num : nums) {
+
+        um[num] += 1;
+        if (um[num] > 1) {
+
+            return true;
+        }
+    }
+    return false;
+}
+```
