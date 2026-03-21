@@ -806,3 +806,194 @@ bool containsDuplicate(vector<int>& nums) {
     return false;
 }
 ```
+
+## 704. 二分查找
+
+> 给定一个 `n` 个元素有序的（升序）整型数组 `nums` 和一个目标值 `target` ，写一个函数搜索 `nums` 中的 `target`，如果 `target` 存在返回下标，否则返回 `-1`。
+>
+> 你必须编写一个具有 `O(log n)` 时间复杂度的算法。
+
+```c++
+int search(vector<int>& nums, int target) {
+    int left = 0, right = nums.size() - 1;
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (nums[mid] == target) {
+
+            return mid;
+        } else if (nums[mid] > target) {
+
+            right = mid - 1;
+        } else {
+
+            left = mid + 1;
+        }
+    }
+    return -1;
+}
+```
+
+## 69. x的平方根
+
+> 给你一个非负整数 `x` ，计算并返回 `x` 的 **算术平方根** 。
+>
+> 由于返回类型是整数，结果只保留 **整数部分** ，小数部分将被 **舍去 。**
+>
+> **注意：**不允许使用任何内置指数函数和算符，例如 `pow(x, 0.5)` 或者 `x ** 0.5` 。
+
+```C++
+int mySqrt(int x) {
+    long i = 0;
+    while (1) {
+
+        if (i * i == x) {
+            return i;
+        }
+        if (i * i > x) {
+
+            return i - 1;
+        }
+        i++;
+    }
+}
+```
+
+```C++
+int mySqrt(int x) {
+    int left = 0, right = x;
+    while (left <= right) {
+
+        long mid = left + (right - left) / 2;
+        if (mid * mid == x) {
+
+            return mid;
+        } else if (mid * mid > x) {
+
+            right = mid - 1;
+            if ((mid - 1) * (mid - 1) < x) {
+
+                return mid - 1;
+            }
+        } else {
+
+            left = mid + 1;
+        }
+    }
+    return -1;
+}
+```
+
+## 278. 第一个错误的版本
+
+> 你是产品经理，目前正在带领一个团队开发新的产品。不幸的是，你的产品的最新版本没有通过质量检测。由于每个版本都是基于之前的版本开发的，所以错误的版本之后的所有版本都是错的。
+>
+> 假设你有 `n` 个版本 `[1, 2, ..., n]`，你想找出导致之后所有版本出错的第一个错误的版本。
+>
+> 你可以通过调用 `bool isBadVersion(version)` 接口来判断版本号 `version` 是否在单元测试中出错。实现一个函数来查找第一个错误的版本。你应该尽量减少对调用 API 的次数。
+
+```C++
+int firstBadVersion(int n) {
+    int left = 1, right = n, res = -1;
+    while (left <= right) {
+
+        int mid = left + (right - left) / 2;
+        if (isBadVersion(mid) == true) {
+
+            res = mid;
+            right = mid - 1;
+        } else {
+
+            left = mid + 1;
+        }
+    }
+    return res;
+}
+```
+
+## 219. 存在重复元素II
+
+> 给你一个整数数组 `nums` 和一个整数 `k` ，判断数组中是否存在两个 **不同的索引** `i` 和 `j` ，满足 `nums[i] == nums[j]` 且 `abs(i - j) <= k` 。如果存在，返回 `true` ；否则，返回 `false` 。
+
+```C++
+bool containsNearbyDuplicate(vector<int>& nums, int k) {
+    int left = 0, right = k, cur = left + 1;
+    if (k > nums.size() - 1) {
+
+        right = nums.size() - 1;
+    }
+    while (left < nums.size() - 1) {
+
+        while (cur <= right) {
+
+            if (nums[left] == nums[cur]) {
+
+                return true;
+            }
+            cur++;
+        }
+        left++;
+        right++;
+        if (right > nums.size() - 1) {
+
+            right = nums.size() - 1;
+        }
+        cur = left + 1;
+    }
+    return false;
+}
+```
+
+## 136. 只出现一次的数字
+
+> 给你一个 **非空** 整数数组 `nums` ，除了某个元素只出现一次以外，其余每个元素均出现两次。找出那个只出现了一次的元素。
+>
+> 你必须设计并实现线性时间复杂度的算法来解决此问题，且该算法只使用常量额外空间。
+
+```C++
+int singleNumber(vector<int>& nums) {
+
+    unordered_map<int, int> um;
+    for (auto num : nums) {
+
+        um[num]++;
+    }
+    for (auto u : um) {
+
+        if (u.second == 1) {
+
+            return u.first;
+        }
+    }
+    return -1;
+}
+```
+
+```C++
+int singleNumber(vector<int>& nums) {
+
+    int i = 0, j = 1;
+    sort(nums.begin(), nums.end());
+    while (j < nums.size()) {
+
+        if (nums[i] != nums[j]) {
+            return nums[i];
+        }
+        i += 2;
+        j += 2;
+    }
+    return nums[i];
+}
+```
+
+```C++
+int singleNumber(vector<int>& nums) {
+
+    int res = 0;
+    for (auto num : nums) {
+
+        res ^= num;
+    }
+    return res;
+}
+```
+
