@@ -507,7 +507,11 @@ void reverseString(vector<char>& s) {
 }
 ```
 
+<<<<<<< HEAD
 ## 541. 反转字符串II
+=======
+## 541. 反转字符串 II
+>>>>>>> 3383b132fbc42ca8c2cafe95b46afd90461a6881
 
 > 给定一个字符串 `s` 和一个整数 `k`，从字符串开头算起，每计数至 `2k` 个字符，就反转这 `2k` 字符中的前 `k` 个字符。
 >
@@ -910,7 +914,11 @@ int firstBadVersion(int n) {
 }
 ```
 
+<<<<<<< HEAD
 ## 219. 存在重复元素II
+=======
+## 219. 存在重复元素 II
+>>>>>>> 3383b132fbc42ca8c2cafe95b46afd90461a6881
 
 > 给你一个整数数组 `nums` 和一个整数 `k` ，判断数组中是否存在两个 **不同的索引** `i` 和 `j` ，满足 `nums[i] == nums[j]` 且 `abs(i - j) <= k` 。如果存在，返回 `true` ；否则，返回 `false` 。
 
@@ -997,3 +1005,164 @@ int singleNumber(vector<int>& nums) {
 }
 ```
 
+<<<<<<< HEAD
+=======
+## 209. 长度最小的子数组
+
+> 给定一个含有 `n` 个正整数的数组和一个正整数 `target` **。**
+>
+> 找出该数组中满足其总和大于等于 `target` 的长度最小的 **子数组** `[numsl, numsl+1, ..., numsr-1, numsr]` ，并返回其长度**。**如果不存在符合条件的子数组，返回 `0` 。
+
+```c++
+int minSubArrayLen(int target, vector<int>& nums) {
+
+    if (nums.size() == 1) {
+
+        return nums[0] >= target ? 1 : 0;
+    }
+
+    int left = 0, right = 1, sum = nums[left] + nums[right], res = INT_MAX;
+    if (nums[left] >= target) {
+
+        return 1;
+    }
+    if (sum >= target) {
+        res = 2;
+    }
+    while (right < nums.size()) {
+
+        if (left >= right) {
+            return res;
+        }
+        if (sum >= target) {
+
+            sum -= nums[left];
+            left++;
+        } else {
+
+            right++;
+            if (right < nums.size()) {
+                sum += nums[right];
+            }
+        }
+        if (sum >= target) {
+
+            res = min(res, right - left + 1);
+        }
+    }
+    return res == INT_MAX ? 0 : res;
+}
+```
+
+## 3. 无重复字符的最长子串
+
+> 给定一个字符串 `s` ，请你找出其中不含有重复字符的 **最长 子串** 的长度。
+
+```c++
+int lengthOfLongestSubstring(string s) {
+
+    if (s.size() == 0) {
+
+        return 0;
+    }
+
+    unordered_map<char, int> mp;
+    mp[s[0]] = 1;
+    int i = 0, j = 1, res = 1;
+    while (j < s.size()) {
+
+        if (mp[s[j]] == 0) {
+            mp[s[j]] = 1;
+            res = max(res, j - i + 1);
+            j++;
+        } else {
+            while (mp[s[j]] != 0) {
+                mp[s[i]] = 0;
+                i++;
+            }
+        }
+    }
+    return res;
+}
+```
+
+## 561. 数组拆分 I
+
+> 给定长度为 `2n` 的整数数组 `nums` ，你的任务是将这些数分成 `n` 对, 例如 `(a1, b1), (a2, b2), ..., (an, bn)` ，使得从 `1` 到 `n` 的 `min(ai, bi)` 总和最大。
+>
+> 返回该 **最大总和** 。
+
+```c++
+int arrayPairSum(vector<int>& nums) {
+    sort(nums.begin(), nums.end());
+    int sum = 0;
+    for (int i = 0; i < nums.size(); i += 2) {
+        sum += nums[i];
+    }
+    return sum;
+}
+```
+
+## 455. 分发饼干
+
+> 假设你是一位很棒的家长，想要给你的孩子们一些小饼干。但是，每个孩子最多只能给一块饼干。
+>
+> 对每个孩子 `i`，都有一个胃口值 `g[i]`，这是能让孩子们满足胃口的饼干的最小尺寸；并且每块饼干 `j`，都有一个尺寸 `s[j]` 。如果 `s[j] >= g[i]`，我们可以将这个饼干 `j` 分配给孩子 `i` ，这个孩子会得到满足。你的目标是满足尽可能多的孩子，并输出这个最大数值。
+
+```c++
+int findContentChildren(vector<int>& g, vector<int>& s) {
+    sort(g.begin(), g.end());
+    sort(s.begin(), s.end());
+    int i = 0, j = 0, res = 0;
+    while (i < g.size() && j < s.size()) {
+        if (s[j] >= g[i]) {
+            res++;
+            i++;
+        }
+        j++;
+    }
+    return res;
+}
+```
+
+## 860. 柠檬水找零
+
+> 在柠檬水摊上，每一杯柠檬水的售价为 `5` 美元。顾客排队购买你的产品，（按账单 `bills` 支付的顺序）一次购买一杯。
+>
+> 每位顾客只买一杯柠檬水，然后向你付 `5` 美元、`10` 美元或 `20` 美元。你必须给每个顾客正确找零，也就是说净交易是每位顾客向你支付 `5` 美元。
+>
+> 注意，一开始你手头没有任何零钱。
+>
+> 给你一个整数数组 `bills` ，其中 `bills[i]` 是第 `i` 位顾客付的账。如果你能给每位顾客正确找零，返回 `true` ，否则返回 `false` 。
+
+```c++
+bool lemonadeChange(vector<int>& bills) {
+
+    int five = 0, ten = 0, i = 0;
+    while (i < bills.size()) {
+        if (bills[i] == 5) {
+            five++;
+        } else if (bills[i] == 10) {
+            if (five == 0) {
+
+                return false;
+            }
+            five--;
+            ten++;
+        } else {
+            if (ten > 0 && five > 0) {
+                five--;
+                ten--;
+            } else if (five >= 3) {
+                five -= 3;
+            } else {
+                return false;
+            }
+        }
+        i++;
+    }
+    return true;
+}
+```
+
+>>>>>>> 3383b132fbc42ca8c2cafe95b46afd90461a6881
