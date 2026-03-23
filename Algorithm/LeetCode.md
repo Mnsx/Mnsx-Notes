@@ -507,7 +507,7 @@ void reverseString(vector<char>& s) {
 }
 ```
 
-## 541. 反转字符串II
+## 541. 反转字符串 II
 
 > 给定一个字符串 `s` 和一个整数 `k`，从字符串开头算起，每计数至 `2k` 个字符，就反转这 `2k` 字符中的前 `k` 个字符。
 >
@@ -910,7 +910,7 @@ int firstBadVersion(int n) {
 }
 ```
 
-## 219. 存在重复元素II
+## 219. 存在重复元素 II
 
 > 给你一个整数数组 `nums` 和一个整数 `k` ，判断数组中是否存在两个 **不同的索引** `i` 和 `j` ，满足 `nums[i] == nums[j]` 且 `abs(i - j) <= k` 。如果存在，返回 `true` ；否则，返回 `false` 。
 
@@ -1003,7 +1003,7 @@ int singleNumber(vector<int>& nums) {
 >
 > 找出该数组中满足其总和大于等于 `target` 的长度最小的 **子数组** `[numsl, numsl+1, ..., numsr-1, numsr]` ，并返回其长度**。**如果不存在符合条件的子数组，返回 `0` 。
 
-```C++
+```c++
 int minSubArrayLen(int target, vector<int>& nums) {
 
     if (nums.size() == 1) {
@@ -1076,7 +1076,7 @@ int lengthOfLongestSubstring(string s) {
 }
 ```
 
-## 561. 数组拆分
+## 561. 数组拆分 I
 
 > 给定长度为 `2n` 的整数数组 `nums` ，你的任务是将这些数分成 `n` 对, 例如 `(a1, b1), (a2, b2), ..., (an, bn)` ，使得从 `1` 到 `n` 的 `min(ai, bi)` 总和最大。
 >
@@ -1093,7 +1093,7 @@ int arrayPairSum(vector<int>& nums) {
 }
 ```
 
-## 455.  分发饼干
+## 455. 分发饼干
 
 > 假设你是一位很棒的家长，想要给你的孩子们一些小饼干。但是，每个孩子最多只能给一块饼干。
 >
@@ -1125,7 +1125,7 @@ int findContentChildren(vector<int>& g, vector<int>& s) {
 >
 > 给你一个整数数组 `bills` ，其中 `bills[i]` 是第 `i` 位顾客付的账。如果你能给每位顾客正确找零，返回 `true` ，否则返回 `false` 。
 
-```C++
+```c++
 bool lemonadeChange(vector<int>& bills) {
 
     int five = 0, ten = 0, i = 0;
