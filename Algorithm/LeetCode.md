@@ -1005,8 +1005,6 @@ int singleNumber(vector<int>& nums) {
 }
 ```
 
-<<<<<<< HEAD
-=======
 ## 209. 长度最小的子数组
 
 > 给定一个含有 `n` 个正整数的数组和一个正整数 `target` **。**
@@ -1165,4 +1163,102 @@ bool lemonadeChange(vector<int>& bills) {
 }
 ```
 
->>>>>>> 3383b132fbc42ca8c2cafe95b46afd90461a6881
+## 58. 最后一个单词的长度
+
+> 给你一个字符串 `s`，由若干单词组成，单词前后用一些空格字符隔开。返回字符串中 **最后一个** 单词的长度。
+>
+> **单词** 是指仅由字母组成、不包含任何空格字符的最大子字符串。
+
+```c++
+int lengthOfLastWord(string s) {
+    int res = 0, i = s.size() - 1;
+    for ( ; i >= 0; --i) {
+        if (s[i] != ' ') {
+            res++;
+        } else {
+            if (res != 0) {
+                return res;
+            }
+        }
+    }
+    return res;
+}
+```
+
+## 66. 加一
+
+> 给定一个表示 **大整数** 的整数数组 `digits`，其中 `digits[i]` 是整数的第 `i` 位数字。这些数字按从左到右，从最高位到最低位排列。这个大整数不包含任何前导 `0`。
+>
+> 将大整数加 1，并返回结果的数字数组。
+
+```c++
+vector<int> plusOne(vector<int>& digits) {
+    int add = 0;
+    digits[digits.size() - 1] += 1;
+    for (int i = digits.size() - 1; i >= 0; --i) {
+        digits[i] += add;
+        if (digits[i] > 9) {
+            digits[i] -= 10;
+            add = 1;
+        } else {
+            add = 0;
+        }
+    }
+    if (add == 1) {
+        digits.insert(digits.begin(), 1);
+    }
+    return digits;
+}
+```
+
+## 389. 找不同
+
+> 给定两个字符串 `s` 和 `t` ，它们只包含小写字母。
+>
+> 字符串 `t` 由字符串 `s` 随机重排，然后在随机位置添加一个字母。
+>
+> 请找出在 `t` 中被添加的字母。
+
+```c++
+char findTheDifference(string s, string t) {
+    int i = 0, sum1 = 0, sum2 = 0;
+    sum2 += t[t.size() - 1];
+    while (i < s.size()) {
+        sum1 += s[i];
+        sum2 += t[i];
+        i++;
+    }
+    return static_cast<char>(sum2 - sum1);
+}
+```
+
+## 118. 杨辉三角
+
+> 给定一个非负整数 *`numRows`，*生成「杨辉三角」的前 *`numRows`* 行。
+>
+> 在**「杨辉三角」**中，每个数是它左上方和右上方的数的和。
+
+```c++
+vector<vector<int>> generate(int numRows) {
+    if (numRows == 1) {
+        return {{1}};
+    }
+    if (numRows == 2) {
+        return {{1}, {1, 1}};
+    }
+    vector<vector<int>> res = {{1}, {1, 1}};
+    for (int i = 2; i < numRows; ++i) {
+        vector<int> temp;
+        for (int j = 0; j <= i; ++j) {
+            if (j == 0 || j == i) {
+                temp.push_back(1);
+            } else {
+                temp.push_back(res[i - 1][j - 1] + res[i - 1][j]);
+            }
+        }
+        res.push_back(temp);
+    }
+    return res;
+}
+```
+
