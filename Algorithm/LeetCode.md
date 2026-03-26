@@ -1262,3 +1262,132 @@ vector<vector<int>> generate(int numRows) {
 }
 ```
 
+## 83. 删除排序链表中的重复元素
+
+> 给定一个已排序的链表的头 `head` ， *删除所有重复的元素，使每个元素只出现一次* 。返回 *已排序的链表* 。
+
+```c++
+ListNode* deleteDuplicates(ListNode* head) {
+    if (head == nullptr || head->next == nullptr) {
+        return head;
+    }
+    ListNode * left = head;
+    ListNode * right = head->next;
+    while (right != nullptr) {
+
+        if (left->val == right->val) {
+
+            right = right->next;
+        } else {
+
+            left->next = right;
+            left = left->next;
+            right = right->next;
+        }
+    }
+    left->next = right;
+
+    return head;
+}
+```
+
+## 206. 反转链表
+
+> 给你单链表的头节点 `head` ，请你反转链表，并返回反转后的链表。
+
+```c++
+ListNode* reverseList(ListNode* head) {
+    if (head == nullptr || head->next == nullptr) {
+
+        return head;
+    }
+
+    ListNode * left = nullptr;
+    ListNode * mid = head;
+    ListNode * right = head->next;
+
+    while (right != nullptr) {
+
+        mid->next = left;
+        left = mid;
+        mid = right;
+        right = right->next;
+    }
+    mid->next = left;
+    return mid;
+}
+```
+
+## 203. 移除链表元素
+
+> 给你一个链表的头节点 `head` 和一个整数 `val` ，请你删除链表中所有满足 `Node.val == val` 的节点，并返回 **新的头节点** 。
+
+```c++
+ListNode* removeElements(ListNode* head, int val) {
+    while (head != nullptr && head->val == val) {
+        head = head->next;
+    }
+    if (head == nullptr) {
+        return head;
+    }
+    if (head->next == nullptr) {
+        return head->val == val ? nullptr : head;
+    }
+    ListNode * left = head;
+    ListNode * right = head->next;
+    while (right != nullptr) {
+
+        if (right->val == val) {
+
+            left->next = right->next;
+            right = right->next;
+        } else {
+
+            right = right->next;
+            left = left->next;
+        }
+    }
+    return head;
+}
+```
+
+```c++
+ListNode* removeElements(ListNode* head, int val) {
+    if (head == nullptr) {
+
+        return head;
+    }
+
+    head->next = removeElements(head->next, val);
+
+    return head->val == val ? head->next : head;
+}
+```
+
+## 237. 删除链表中的节点
+
+> 有一个单链表的 `head`，我们想删除它其中的一个节点 `node`。
+>
+> 给你一个需要删除的节点 `node` 。你将 **无法访问** 第一个节点 `head`。
+>
+> 链表的所有值都是 **唯一的**，并且保证给定的节点 `node` 不是链表中的最后一个节点。
+>
+> 删除给定的节点。注意，删除节点并不是指从内存中删除它。这里的意思是：
+>
+> - 给定节点的值不应该存在于链表中。
+> - 链表中的节点数应该减少 1。
+> - `node` 前面的所有值顺序相同。
+> - `node` 后面的所有值顺序相同。
+>
+> **自定义测试：**
+>
+> - 对于输入，你应该提供整个链表 `head` 和要给出的节点 `node`。`node` 不应该是链表的最后一个节点，而应该是链表中的一个实际节点。
+> - 我们将构建链表，并将节点传递给你的函数。
+> - 输出将是调用你函数后的整个链表。
+
+```c++
+void deleteNode(ListNode* node) {
+    node->val = node->next->val;
+    node->next = node->next->next;
+}
+```
