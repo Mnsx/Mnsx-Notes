@@ -1391,3 +1391,486 @@ void deleteNode(ListNode* node) {
     node->next = node->next->next;
 }
 ```
+
+## 141. 环形链表
+
+> 给你一个链表的头节点 `head` ，判断链表中是否有环。
+>
+> 如果链表中有某个节点，可以通过连续跟踪 `next` 指针再次到达，则链表中存在环。 为了表示给定链表中的环，评测系统内部使用整数 `pos` 来表示链表尾连接到链表中的位置（索引从 0 开始）。**注意：`pos` 不作为参数进行传递** 。仅仅是为了标识链表的实际情况。
+>
+> *如果链表中存在环* ，则返回 `true` 。 否则，返回 `false` 。
+
+```c++
+bool hasCycle(ListNode *head) {
+
+    if (head == nullptr) {
+
+        return false;
+    }
+
+    ListNode *fast = head;
+    ListNode *slow = head;
+
+    while (fast->next != nullptr) {
+
+        fast = fast->next->next;
+        slow = slow->next;
+
+        if (fast == slow) {
+
+            return true;
+        }
+    }
+    return false;
+}
+```
+
+## 160. 相交链表
+
+> 给你两个单链表的头节点 `headA` 和 `headB` ，请你找出并返回两个单链表相交的起始节点。如果两个链表不存在相交节点，返回 `null` 。
+>
+> 图示两个链表在节点 `c1` 开始相交**：**
+>
+> 题目数据 **保证** 整个链式结构中不存在环。
+>
+> **注意**，函数返回结果后，链表必须 **保持其原始结构** 。
+>
+> **自定义评测：**
+>
+> **评测系统** 的输入如下（你设计的程序 **不适用** 此输入）：
+>
+> - `intersectVal` - 相交的起始节点的值。如果不存在相交节点，这一值为 `0`
+> - `listA` - 第一个链表
+> - `listB` - 第二个链表
+> - `skipA` - 在 `listA` 中（从头节点开始）跳到交叉节点的节点数
+> - `skipB` - 在 `listB` 中（从头节点开始）跳到交叉节点的节点数
+>
+> 评测系统将根据这些输入创建链式数据结构，并将两个头节点 `headA` 和 `headB` 传递给你的程序。如果程序能够正确返回相交节点，那么你的解决方案将被 **视作正确答案** 。
+
+```c++
+ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
+
+    ListNode *a = headA;
+    ListNode *b = headB;
+
+    while (a != nullptr && b != nullptr) {
+
+        a = a->next;
+        b = b->next;
+    }
+
+    while (b != nullptr) {
+
+        b = b->next;
+        headB = headB->next;
+    } 
+    while (a != nullptr) {
+
+        a = a->next;
+        headA = headA->next;
+    }
+
+    while (headA != nullptr && headB != nullptr) {
+
+        if (headA == headB) {
+
+            return headA;
+        }
+        headA = headA->next;
+        headB = headB->next;
+    }
+
+    return nullptr;
+}
+```
+
+## 234. 回文链表
+
+> 给你一个单链表的头节点 `head` ，请你判断该链表是否为回文链表。如果是，返回 `true` ；否则，返回 `false` 。
+
+```c++
+bool isPalindrome(ListNode* head) {
+
+    if (head->next == nullptr) {
+
+        return true;
+    }
+
+    stack<int> s;
+    ListNode * fast = head;
+    ListNode * slow = head;
+
+    while (fast != nullptr && fast->next != nullptr) {
+
+        s.push(slow->val);
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+
+    if (fast != nullptr && fast->next == nullptr) {
+
+        slow = slow->next;
+    }
+
+    while (slow != nullptr) {
+
+        cout << slow->val << " " << s.top();
+        if (slow->val != s.top()) {
+
+            return false;
+        }
+        s.pop();
+        slow = slow->next;
+    }
+
+    return true;
+}
+```
+
+## 19. 删除链表的倒数第N个节点
+
+> 给你一个链表，删除链表的倒数第 `n` 个结点，并且返回链表的头结点。
+
+```c++
+ListNode* removeNthFromEnd(ListNode* head, int n) {
+
+    if (head->next == nullptr && n == 1) {
+
+        return nullptr;
+    }
+
+    ListNode * pre = new ListNode();
+    pre->next = head;
+    ListNode * cur = pre;
+    ListNode * res  = pre;
+
+    for (int i = 0; i < n; ++i) {
+
+        cur = cur->next;
+    }
+
+    while (cur->next != nullptr) {
+
+        cur = cur->next;
+        pre = pre->next;
+    }
+
+    pre->next = pre->next->next;
+
+    return res->next;
+}
+```
+
+## 24. 两两交换链表中的节点
+
+> 给你一个链表，两两交换其中相邻的节点，并返回交换后链表的头节点。你必须在不修改节点内部的值的情况下完成本题（即，只能进行节点交换）。
+
+```c++
+ListNode* swapPairs(ListNode* head) {
+
+    if (head == nullptr) {
+
+        return nullptr;
+    }
+
+    if (head->next == nullptr) {
+
+        return head;
+    }
+
+    ListNode * pre = new ListNode();
+    pre->next = head;
+    ListNode * res = pre;
+
+    ListNode * left = pre;
+    ListNode * mid = head;
+    ListNode * right = head->next;
+
+    while (mid != nullptr && right != nullptr) {
+
+        mid->next = right->next;
+        right->next = mid;
+        left->next = right;
+
+        left = left->next->next;
+        mid = left->next;
+        if (mid == nullptr) {
+
+            break;
+        }
+        right = mid->next;
+    }
+    return res->next;
+}
+```
+
+## 232. 用栈实现队列
+
+> 请你仅使用两个栈实现先入先出队列。队列应当支持一般队列支持的所有操作（`push`、`pop`、`peek`、`empty`）：
+>
+> 实现 `MyQueue` 类：
+>
+> - `void push(int x)` 将元素 x 推到队列的末尾
+> - `int pop()` 从队列的开头移除并返回元素
+> - `int peek()` 返回队列开头的元素
+> - `boolean empty()` 如果队列为空，返回 `true` ；否则，返回 `false`
+>
+> **说明：**
+>
+> - 你 **只能** 使用标准的栈操作 —— 也就是只有 `push to top`, `peek/pop from top`, `size`, 和 `is empty` 操作是合法的。
+> - 你所使用的语言也许不支持栈。你可以使用 list 或者 deque（双端队列）来模拟一个栈，只要是标准的栈操作即可。
+
+```c++
+class MyQueue {
+    public:
+    stack<int> s;
+    stack<int> sIn;
+
+    MyQueue() {
+
+    }
+
+    void push(int x) {
+
+        if (s.size() == 0) {
+
+            s.push(x);
+        } else {
+
+            while (s.size() != 0) {
+
+                sIn.push(s.top());
+                s.pop();
+            }
+            s.push(x);
+            while (sIn.size() != 0) {
+
+                s.push(sIn.top());
+                sIn.pop();
+            }
+        }
+    }
+
+    int pop() {
+
+        int temp = s.top();
+        s.pop();
+        return temp;
+    }
+
+    int peek() {
+
+        return s.top();
+    }
+
+    bool empty() {
+
+        return s.size() == 0;
+    }
+};
+```
+
+## 225. 用队列实现栈
+
+> 请你仅使用两个队列实现一个后入先出（LIFO）的栈，并支持普通栈的全部四种操作（`push`、`top`、`pop` 和 `empty`）。
+>
+> 实现 `MyStack` 类：
+>
+> - `void push(int x)` 将元素 x 压入栈顶。
+> - `int pop()` 移除并返回栈顶元素。
+> - `int top()` 返回栈顶元素。
+> - `boolean empty()` 如果栈是空的，返回 `true` ；否则，返回 `false` 。
+>
+>  
+>
+> **注意：**
+>
+> - 你只能使用队列的标准操作 —— 也就是 `push to back`、`peek/pop from front`、`size` 和 `is empty` 这些操作。
+> - 你所使用的语言也许不支持队列。 你可以使用 list （列表）或者 deque（双端队列）来模拟一个队列 , 只要是标准的队列操作即可。
+
+```c++
+class MyStack {
+public:
+    queue<int> q;
+    queue<int> qOut;
+
+    MyStack() {
+        
+    }
+    
+    void push(int x) {
+        
+        q.push(x);
+    }
+    
+    int pop() {
+        
+        if (q.size() == 0) {
+
+            return q.front();
+        }
+
+        int res = q.back();
+        while (q.size() != 1) {
+
+            qOut.push(q.front());
+            q.pop();
+        }
+        q.pop();
+
+        while (qOut.size() != 0) {
+
+            q.push(qOut.front());
+            qOut.pop();
+        }
+
+        return res;
+    }
+    
+    int top() {
+
+        return q.back();
+    }
+    
+    bool empty() {
+        
+        return q.size() == 0;
+    }
+};
+```
+
+## 155. 最小栈
+
+> 设计一个支持 `push` ，`pop` ，`top` 操作，并能在常数时间内检索到最小元素的栈。
+>
+> 实现 `MinStack` 类:
+>
+> - `MinStack()` 初始化堆栈对象。
+> - `void push(int val)` 将元素val推入堆栈。
+> - `void pop()` 删除堆栈顶部的元素。
+> - `int top()` 获取堆栈顶部的元素。
+> - `int getMin()` 获取堆栈中的最小元素。
+
+```c++
+class MinStack {
+public:
+    stack<int> s;
+    stack<int> sMin;
+
+    MinStack() {
+        
+    }
+    
+    void push(int val) {
+        
+        if (s.size() == 0) {
+
+            s.push(val);
+            sMin.push(val);
+        } else {
+
+            s.push(val);
+
+            stack<int> tempS;
+            while (sMin.size() != 0 && sMin.top() < val) {
+
+                tempS.push(sMin.top());
+                sMin.pop();
+            }
+            sMin.push(val);
+            while (tempS.size() != 0) {
+
+                sMin.push(tempS.top());
+                tempS.pop();
+            }
+        }
+    }
+    
+    void pop() {
+
+        int temp = s.top();
+        s.pop();
+
+        stack<int> tempS;
+        while (sMin.size() != 0 && sMin.top() != temp) {
+
+            tempS.push(sMin.top());
+            sMin.pop();
+        }
+        sMin.pop();
+        while (tempS.size() != 0) {
+
+            sMin.push(tempS.top());
+            tempS.pop();
+        }
+    }
+    
+    int top() {
+        
+        return s.top();
+    }
+    
+    int getMin() {
+        
+        return sMin.top();
+    }
+};
+```
+
+## 比较含退格的字符串
+
+> 给定 `s` 和 `t` 两个字符串，当它们分别被输入到空白的文本编辑器后，如果两者相等，返回 `true` 。`#` 代表退格字符。
+>
+> **注意：**如果对空文本输入退格字符，文本继续为空。
+
+```c++
+bool backspaceCompare(string s, string t) {
+
+    stack<char> st;
+    stack<char> stt;
+    for (int i = 0; i < s.size(); ++i) {
+
+        if (s[i] == '#' && st.size() != 0) {
+
+            st.pop();
+        } else {
+
+            if (s[i] != '#') {
+
+                st.push(s[i]);
+            }
+        }
+    }
+    for (int i = 0; i < t.size(); ++i) {
+
+        if (t[i] == '#' && stt.size() != 0) {
+
+            stt.pop();
+        } else {
+
+            if (t[i] != '#') {
+
+                stt.push(t[i]);
+            }
+        }
+    }
+
+    if (st.size() != stt.size()) {
+
+        return false;
+    }
+
+    while (st.size() != 0) {
+
+        if (st.top() != stt.top()) {
+
+            return false;
+        }
+        st.pop();
+        stt.pop();
+    }
+
+    return true;
+}
+```
+
