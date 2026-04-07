@@ -4,7 +4,7 @@ echo ========================================
 echo 🚀 自动同步到 GitHub（%date% %time%）
 echo ========================================
 
-set "REPO_DIR=E:\Notes"
+set "REPO_DIR=D:\Documents\Notes"
 
 cd /d "%REPO_DIR%"
 if %errorlevel% neq 0 (
