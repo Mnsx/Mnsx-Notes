@@ -4,8 +4,10 @@
 *.bat
 *.sh
 .idea*/
+.obsidian*/
 cmake-build-*/
 build/
+v1.0.0*/
 CMakeCache.txt
 CMakeFiles/
 Makefile
