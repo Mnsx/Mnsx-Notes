@@ -1,0 +1,96 @@
+# 检查系统cmake版本还隐式调用cmake_policy(version)
+cmake_minimum_required(VERSION 3.10)
+
+# 指定PROJECT-NAME将调用指令隐式设置以下变量
+# PROJECT_NAME
+# CMAKE_PROJECT_NAME
+# PROJECT_SOURCE_DIR, <PROJECT-NAME>_SOURCE_DIR
+# PROJECT_BINARY_DIR, <PROJECT-NAME>_BINARY_DIR
+# 指定VERSION将自动定义以下变量
+# PROJECT_VERSION, <PROJECT-NAME>_VERSION
+# CMAKE_PROJECT_NAME
+# PROJECT_VERSION_MAJOR, <PROJECT-NAME>_VERSION_MAJOR
+# PROJECT_VERSION_MINOR, <PROJECT-NAME>_VERSION_MINOR
+# PROJECT_VERSION_PATCH, <PROJECT-NAME>_VERSION_PATCH
+# PROJECT_VERSION_TWEAK, <PROJECT-NAME>_VERSION_TWEAK
+# project(<PROJECT-NAME> [<language-name>...])
+project(<PROJECT-NAME>
+        [VERSION <major>[.<minor>[.<patch>[.<tweak>]]]]
+        [DESCRIPTION <project-description-string>]
+        [HOMEPAGE_URL <url-string>]
+        [LANGUAGES <language-name>...])
+
+# ==================================================
+# 项目划分案例
+# ==================================================
+# 01-partition/CMakeLists.txt
+
+cmake_minimum_required(VERSION 3.10)
+project(Rental CXX)
+add_executable(Rental
+        main.cpp
+        cars/car.cpp
+)
+# ==================================================
+# 02-include/CMakeLists.txt
+
+cmake_minimum_required(VERSION 3.10)
+project(Rental CXX)
+
+set(cars_sources
+        cars/car.cpp
+)
+
+include(cars/cars.cmake)
+add_executable(Rental
+        main.cpp
+        ${cars_sources}
+)
+# 上述嵌套方案存在问题
+# 1. 来自嵌套目录的变量会污染顶层作用域
+# 2. 所有的目录将共享相同的配置
+# 3. 对配置的更改需要重新编译所有文件
+# 4. car.cmake中必须提供cars/car.cpp文件的完整路径
+# ==================================================
+# add_subdirectory()
+# ==================================================
+add_subdirectory(source_idr [binary_dir][EXCLUDE_FROM_ALL])
+# source_dir 这将向构建添加一个源目录
+# binary_dir 提供一个写入构建文件的路径
+# EXCLUDE_FROM_ALL 将禁用在子目录中定义的目标的默认构建
+# 这个指令将在source_dir路径中查找CMakeLists.txt文件，这个文件将在目录作用域中解析
+# ==================================================
+cmake_minimum_required(VERSION 3.20.0)
+project(Rental CXX)
+add_executable(Rental main.cpp)
+
+add_subdirectory(cars) # 添加cars下的cmake
+target_link_libraries(Rental PRIVATE cars) # 将cars中于本项目链接，PRIVATE防止其他项目引用
+# ==================================================
+add_library(cars OBJECT
+        car.cpp
+) # 生成全局可见的目标cars
+target_include_directories(cars PUBLIC .) # 将cars目录添加到其他公共包括目录中
+
+# 环境配置
+if(CMAKE_SYSTEM_VERSION STREQUAL "Linux") # 获取当前系统名称
+    message(STATUS "LINUX")
+endif()
+# CMake提供获取环境操作系统的细节的常量，需要时查找
+if(CMAKE_SIZEOF_VOID_P EQUAL 8) # 判断是64还是32位
+    message(STATUS "Target is 64 bits")
+endif()
+
+# 配置工具链
+# 设定C++标准
+set_property(TARGET <target> PROPERTY CXX_STANDARD <standard>)
+# 坚持支持标注
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# 特定于供应商的扩展
+set(CMAKE_CXX_EXTENSIONS OFF)
+# 过程间优化
+include(CheckIPOSupported)
+check_ipo_supported(RESULT ipo_supported)
+if(ipo_supported)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION True)
+endif()
